@@ -1,0 +1,91 @@
+﻿@model MedicineListViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Фармокологический справочник</h1>
+
+<div class="row">
+
+    <div class="col-sm-2">
+        <form asp-action="Index" method="get">
+            <div class="form-group">
+                <label class="control-label" asp-for="Name"></label>
+                <select id="name" name="name" asp-items="Model.Names" class="form-control">
+                    <option style="display:none">&nbsp;</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="control-label" asp-for="ActiveSubstance"></label>
+                <select id="activeSubstance" name="activeSubstance" asp-items="Model.ActiveSubstances" class="form-control">
+                    <option style="display:none">&nbsp;</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="control-label" asp-for="Group"></label>
+                <select id="group" name="group" asp-items="Model.Groups" class="form-control">
+                    <option style="display:none">&nbsp;</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Поиск</button>
+            <a class="btn btn-success" asp-action="Create">Добавить лекарство</a>
+        </form>
+    </div>
+
+    <div class="col-sm-10">
+        @if (Model.Medicines.Count() == 0)
+        {
+            <div class="text-center">No Records Found</div>
+            <div class="container">
+                <div class="row">
+                    <div class="col text-center">
+                        <a type="button" class="btn btn-primary btn-lg btn-block" asp-controller="Medicine" asp-action="Create">Загрузить РПД</a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Название</th>
+                        <th>Действующее вещество</th>
+                        <th>Фармакологическая группа</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var medicine in Model.Medicines)
+                    {
+                        <tr>
+                            <th>@medicine.Id</th>
+                            <td>@medicine.Name</td>
+                            <td>@medicine.ActiveSubstance</td>
+                            <td>@medicine.Group</td>
+                            <td class="row">
+                                <a type="button" class="btn m-1 btn-info" asp-controller="Medicine" asp-action="Details" asp-route-id="@medicine.Id">Описание</a>
+                                <a type="button" class="btn btn-primary m-1" asp-controller="Medicine" asp-action="Edit" asp-route-id="@medicine.Id">Редактировать</a>
+                                <a type="button" class="btn m-1 btn-danger" asp-controller="Medicine" asp-action="Delete" asp-route-id="@medicine.Id">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+</div>
+
+
+@section Scripts{ 
+<script type="text/javascript">
+    $(function () {
+        $('#name').chosen();
+        $('#activeSubstance').chosen();
+        $('#group').chosen();
+    });
+</script>
+}
