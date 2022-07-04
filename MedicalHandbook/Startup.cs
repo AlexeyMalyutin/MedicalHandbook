@@ -53,7 +53,7 @@ namespace MedicalHandbook
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Medicine}/{action=Index}/{id?}");
             });
         }
     }

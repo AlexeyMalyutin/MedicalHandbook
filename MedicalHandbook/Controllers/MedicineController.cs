@@ -55,14 +55,14 @@ namespace MedicalHandbook.Controllers
         }
 
         // GET: Medicine/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var medicine = await _context.Medicines.FirstOrDefaultAsync(m => m.Id == id);
+            var medicine = _context.Medicines.FirstOrDefault(m => m.Id == id);
             if (medicine == null)
             {
                 return NotFound();
@@ -72,34 +72,42 @@ namespace MedicalHandbook.Controllers
         }
 
         // GET: Medicine/Create
-        public IActionResult Create()
+        public IActionResult Create(bool isFailed = false)
         {
+            ViewBag.IsFailed = isFailed;
             return View();
         }
 
         // POST: Medicine/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,ActiveSubstance,Group,Description")] Medicine medicine)
+        public IActionResult Create([Bind("Id,Name,ActiveSubstance,Group,Description")] Medicine medicine)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(medicine);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                bool isExisted = _context.Medicines
+                    .Any(m => m.Name == medicine.Name && m.ActiveSubstance == medicine.ActiveSubstance);
+
+                if (!isExisted)
+                {
+                    _context.Add(medicine);
+                    _context.SaveChanges();
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    return RedirectToAction(nameof(Create), new { isFailed = isExisted });
+                }
             }
             return View(medicine);
         }
 
         // GET: Medicine/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit(int id, bool isFailed = false)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            ViewBag.IsFailed = isFailed;
 
-            var medicine = await _context.Medicines.FindAsync(id);
+            var medicine = _context.Medicines.Find(id);
             if (medicine == null)
             {
                 return NotFound();
@@ -110,46 +118,61 @@ namespace MedicalHandbook.Controllers
         // POST: Medicine/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,ActiveSubstance,Group,Description")] Medicine medicine)
+        public IActionResult Edit(int id, [Bind("Id,Name,ActiveSubstance,Group,Description")] Medicine medicine)
         {
             if (id != medicine.Id)
             {
                 return NotFound();
             }
+            bool isExisted = false;
+            var existed = _context.Medicines
+                .Where(m => m.Name == medicine.Name && m.ActiveSubstance == medicine.ActiveSubstance && m.Id != medicine.Id)
+                .FirstOrDefault();
+            
+            if (existed != null)
+                isExisted = true;
 
             if (ModelState.IsValid)
             {
-                try
+
+                if (!isExisted)
                 {
-                    _context.Update(medicine);
-                    await _context.SaveChangesAsync();
+                    try
+                    {
+                        _context.Update(medicine);
+                        _context.SaveChanges();
+                    }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        if (!MedicineExists(medicine.Id))
+                        {
+                            return NotFound();
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                else
                 {
-                    if (!MedicineExists(medicine.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return RedirectToAction(nameof(Edit), new { id = medicine.Id, isFailed = isExisted });
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(medicine);
         }
 
         // GET: Medicine/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var medicine = await _context.Medicines
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var medicine = _context.Medicines
+                .FirstOrDefault(m => m.Id == id);
             if (medicine == null)
             {
                 return NotFound();
@@ -161,11 +184,11 @@ namespace MedicalHandbook.Controllers
         // POST: Medicine/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var medicine = await _context.Medicines.FindAsync(id);
+            var medicine = _context.Medicines.Find(id);
             _context.Medicines.Remove(medicine);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
 
